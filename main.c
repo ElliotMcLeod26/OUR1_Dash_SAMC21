@@ -1,23 +1,28 @@
 #include <atmel_start.h>
 #include <stdio.h>
 #include <string.h>
-#include "DisplayNumbersAndText.h"
+#include "DisplayLib/DisplayNumbersAndText.h"
 #include "SPI_io_descriptor.h"
 #include "USER_DEF.h"
+
+#define DEBUG
 
 // liGHT comes on initially, wont turn off if receiving messages - if no message, if the bits not good
 //NOTE: SPI baud rate changed to 1Mbaud in config file but not atmel start in the (sercom config file), check this boi
 
-// Variables Global
+// TODO remove the ammeter and voltage meter dial and replace it with a digital display
+// TODO add speedometer using signals from VCU
+// TODO improve flow and commenting of the script, adding higher level description
 
-// For the screen
+// Global Variables For the screen
+// add more commenting
 float current = 0;
 int dcl = 1;
 float motor_voltage1 = 0;
 float motor_voltage2 = 0;
 float pack_voltage = 100;
 int battery_charge = 100;
-int battery_temp = 0;
+int battery_temp = 100;
 int motor_temp1 = 0;
 int motor_temp2 = 0;
 int vcu_status[8];
@@ -232,7 +237,7 @@ void handle_can(void){
 		// Re toggle the message timer counter to 0 every time a message is received
 		//msg_timeout_counter = 0;
 		
-		battery_temp = msg->data[1];
+		// battery_temp = msg->data[1];
 		battery_charge = msg->data[3];
 		
 		break;
@@ -314,13 +319,12 @@ void create_log()
 	//display_numberRight((int)(WIDTH-(0.03*WIDTH)),(int)((HEIGHT*0.3333)+(0.03*HEIGHT)),1,bob);
 }
 
+// main display function
 void display_handler()
 {
 	// Everything must happen within the Start and End frame placeholders
 	startFrame();
-	
-	// Screen Display
-	
+		
 	// AMMETER/VOLTMETER
 	if(precharge_enabled){
 		display_gauge((int)((motor_voltage1 < motor_voltage2 ? motor_voltage1 : motor_voltage2)/pack_voltage*100)); // voltmeter GAUGE
@@ -328,15 +332,15 @@ void display_handler()
 		display_text((int)(gauge_x0-(gauge_radius*0.4)),(int)(HEIGHT-(0.05*HEIGHT)),20,"% max voltage"); // UNIT
 	}
 	else{
-		display_gauge((int)(current/dcl*100)); // ammeter GAUGE
+		// display_gauge((int)(current/dcl*100)); // ammeter GAUGE
 		display_text((int)(gauge_x0-(gauge_radius*0.4)),10,22,"AMMETER"); // TITLE
 		display_text((int)(gauge_x0-(gauge_radius*0.4)),(int)(HEIGHT-(0.05*HEIGHT)),20,"% max current"); // UNIT	
 	}
 	
-	// SEPARATOR LINE (SECTION, SPEEDOMETER)
+	// SEPARATOR LINE, Vertical (SECTION, SPEEDOMETER)
 	display_line(VERT_X,0, VERT_X, HEIGHT, 3);
 	
-	// SERPARATOR LINES, RIGHT HAND SIDE SECTIONS
+	// SERPARATOR LINES, Horizontal, RIGHT HAND SIDE SECTIONS
 	display_line(VERT_X,(int)(HEIGHT*(0.3333)),WIDTH,(int)(HEIGHT*(0.3333)),3);
 	display_line(VERT_X,(int)(HEIGHT*(0.6667)),WIDTH,(int)(HEIGHT*(0.6667)),3);
 	
@@ -476,23 +480,27 @@ int main(void)
 	while (1) {
 		
 		// Check if the message length has gone over 
-		if ((msg_timeout_counter > max_timeout_ms) && AMS_state == 0 && AMS_active == 1) // there have not been new messages received in a while and the light is off
-		{
-			AMS_state = 1; // light should be on
-			gpio_set_pin_level(AMS_LIGHT,AMS_state);
-		}
+		// if ((msg_timeout_counter > max_timeout_ms) && AMS_state == 0 && AMS_active == 1) // there have not been new messages received in a while and the light is off
+		// {
+		// 	AMS_state = 1; // light should be on
+		// 	gpio_set_pin_level(AMS_LIGHT,AMS_state);
+		// }
 		
-		if (display_ms_counter > 100) // Display every 100 ms
+		if (display_ms_counter > 500) // Display every 500 ms
 		{
 			int i;
 			for(i = 0; i < 5; i++){
 				if(vcu_status[i] != 0) break;
 			}
-			
+
+			// #ifdef DEBUG
+			// // ignition_display();
+			// display_handler();
+			// #else
 			if(i < 5) vcu_status_log_display();
 			else if(TS_button_timer_started && precharge_enabled) ignition_display();
 			else display_handler();
-			
+			// #endif
 			
 			display_ms_counter = 0;
 		}
@@ -536,7 +544,7 @@ int main(void)
 			can_tx_ms_counter = 0;
 		}
 		
-		handle_can();
+		// handle_can();
 		
 	}
 }
