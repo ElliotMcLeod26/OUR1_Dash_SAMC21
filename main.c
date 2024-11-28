@@ -326,19 +326,21 @@ void display_handler()
 {
 	// Everything must happen within the Start and End frame placeholders
 	startFrame();
-		
-	// AMMETER/VOLTMETER
-	if(precharge_enabled){
-		display_gauge((int)((motor_voltage1 < motor_voltage2 ? motor_voltage1 : motor_voltage2)/pack_voltage*100)); // voltmeter GAUGE
-		display_text((int)(gauge_x0-(gauge_radius*0.4)),10,22,"VOLTMETER"); // TITLE
-		display_text((int)(gauge_x0-(gauge_radius*0.4)),(int)(HEIGHT-(0.05*HEIGHT)),20,"% max voltage"); // UNIT
-	}
-	else{
-		// display_gauge((int)(current/dcl*100)); // ammeter GAUGE
-		display_text((int)(gauge_x0-(gauge_radius*0.4)),10,22,"AMMETER"); // TITLE
-		display_text((int)(gauge_x0-(gauge_radius*0.4)),(int)(HEIGHT-(0.05*HEIGHT)),20,"% max current"); // UNIT	
-	}
+
+	//MOTOR VOLTMETER INDICATION
 	
+	int lowest_motor_voltage = (int)((motor_voltage1 < motor_voltage2 ? motor_voltage1 : motor_voltage2)/pack_voltage*100);  // Finds lower voltage between the two motors
+	char buffer[50];    // Buffer to hold the formatted string
+	
+	sprintf(buffer, "Voltage: %d V", lowest_motor_voltage); // Convert the  voltage value to a string
+	display_text(0,20,20, buffer);
+	
+
+	//AMMETER GAUGE (Now will be permanently on dash)
+	display_gauge((int)(current/dcl*100)); // ammeter GAUGE
+	display_text((int)(gauge_x0-(gauge_radius*0.4)),10,22,"AMMETER"); // TITLE
+	display_text((int)(gauge_x0-(gauge_radius*0.4)),(int)(HEIGHT-(0.05*HEIGHT)),20,"% max current"); // UNIT
+
 	// SEPARATOR LINE, Vertical (SECTION, SPEEDOMETER)
 	display_line(VERT_X,0, VERT_X, HEIGHT, 3);
 	
