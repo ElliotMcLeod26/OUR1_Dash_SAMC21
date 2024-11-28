@@ -13,6 +13,8 @@
 // TODO remove the ammeter and voltage meter dial and replace it with a digital display
 // TODO add speedometer using signals from VCU
 // TODO improve flow and commenting of the script, adding higher level description
+// TODO Implement better no signal functionality
+
 
 // Global Variables For the screen
 // add more commenting
